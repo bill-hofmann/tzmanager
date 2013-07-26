@@ -1,6 +1,7 @@
 # Team.rb
 
 require 'mongoid'
+require 'tzinfo'
 
 class Team
     include Mongoid::Document
@@ -17,7 +18,7 @@ class Member
 	include Mongoid::Document
 	field :name, type: String
 	field :email, type: String
-	field :location, type: String		# if empty, defaults to team
-	field :timezone, type: String		# if empty, defaults to team
-	embedded_in :team
+	field :location, type: String
+	field :timezone, type: String
+#	embedded_in :team
 end
