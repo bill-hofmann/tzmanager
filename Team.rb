@@ -1,6 +1,7 @@
 # class: Team
 require 'tzinfo'
 require 'geonames'
+require 'digest'
 
 class Team
   ##
@@ -9,16 +10,24 @@ class Team
   ## Work hours - wall clock time - an array of start and finish hours, 0..n
   ## Members of the team
   ## 
-  attr_accessor :name, :timezone, :cityname, :tzinfo, :workhours, :members
+  attr_accessor :id, :name, :timezone, :cityname, :tzinfo, :workhours, :members
 
   ## Class Variable
   @@default_workhours = [9..12, 13..18]
+  @@sha256 = Digest::SHA256.new
 
   def initialize(name, city, country, workhours = nil)
     @members = []
     @workhours = workhours || @@default_workhours
     @name = name
+    dig = @@sha256.digest "#{name}.#{city}.#{country}.#{Time.now}"
+    @id = Digest::hexencode(dig)
+    set_city city, country
 
+    self
+  end
+
+  def set_city city, country
     sc = Geonames::ToponymSearchCriteria.new
     sc.name_starts_with = city
     sc.country_code = country
@@ -34,8 +43,6 @@ class Team
     else
       raise(ArgumentError, "City ${city} in ${country} Not Found")
     end
-
-    self
   end
 
   def add_member new_member
@@ -53,10 +60,8 @@ class Team
     ranges.each do |r|
       lastr = outages[-1]
       if lastr.last >= r.first
-        puts "lastr.last >= r.first - 1: #{lastr.last} >= #{r.first-1}"
         outages[-1] = lastr.first..[r.last, lastr.last].max
       else
-        puts "else."
         outages.push(r)
       end
     end

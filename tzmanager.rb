@@ -3,25 +3,15 @@
 
 require 'sinatra'
 require 'tzinfo'
-#require 'Team'
 require 'mongoid'
 require 'json'
+require 'team'
+require 'member'
 
-Mongoid.load!("mongoid.yml")
+teams = []
+members = []
 
-class Member
-  include Mongoid::Document
-  field :name
-  field :email
-  field :location
-  field :timezone
-  # field :name, type: String
-  # field :email, type: String
-  # field :location, type: String
-  # field :timezone, type: String
-# embedded_in :team
-end
-
+#Mongoid.load!("mongoid.yml")
 
 ################################################################
 #    Locations - read only layer atop tzinfo
@@ -53,53 +43,84 @@ end
 #    Teams - read/write
 #
 get '/teams' do
-
+  teams
 end
 
 get '/team/:id' do
-
+  team = teams.select { |a| a.id == :id }
 end
 
 post '/team' do
+  name = params[:name]
+  city = params[:city]
+  country = params[:country]
+  workhours = params[:workhours] or nil
+  team = Team.new(name, city, country, workhours)
+  teams = teams << team
 
+  team.id
 end
 
 put '/team/:id' do
+  team = teams.select { |a| a.id = :id }
+  return 403 if team == nil
 
+  name = params[:name] or nil
+  city = params[:city] or nil
+  country = params[:country] or nil
+  workhours = params[:workhours] or nil
+
+  team.name = name unless name == nil
+  team.workhours = workhours unless workhours == nil
+  team.set_city city, country unless city == nil or country == nil
+
+  team.id
 end
 
 delete '/team/:id' do
+  teams = teams.reject! { |a| a.id == :id }
 
+  200
 end
 
 ################################################################
 #    Member - read/write
 #
 get '/members' do
-
+  members
 end
 
 get '/member/:id' do
-
+  member = members.select { |a| a.id == :id }
 end
 
 post '/member' do
-  # member = Member.new name: 'Bill', email: 'bill.hofmann@gmail.com', location: 'Berkeley', timezone: 'Americas/Los Angeles' 
-  member = Member.new
-  member.name = 'Bill'
-  member.email = 'bill.hofmann@gmail.com'
-  member.location = 'Berkeley'
-  member.timezone = 'Americas/Los Angeles'
-  member.save
-  member._id
+  name = params[:name]
+  email = params[:email]
+  associated_teams = params[:associated_teams] or nil
+  member = Member.new(name, email, associated_teams)
+  members = members << member
+
+  member.id
 end
 
 put '/member/:id' do
+  member = members.select { |a| a.id == :id }
+  name = params[:name] or nil
+  email = params[:email] or nil
+  associated_teams = params[:associated_teams] or nil
 
+  member.name = name unless name == nil
+  member.email = email unless email == nil
+  member.associated_teams = associated_teams unless associated_teams == nil
+
+  member.id
 end
 
 delete '/member/:id' do
+  members = members.reject! { |a| a.id == :id }
 
+  200
 end
 
 
